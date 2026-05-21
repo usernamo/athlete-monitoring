@@ -106,12 +106,28 @@ APK: `app\build\outputs\apk\release\app-release.apk`
 
 ## Если деплой упал (Failed deploy)
 
+### Ошибка `ENOTFOUND dpg-xxxxx-a`
+
+Render выдал **короткий** хост БД без домена. API и база должны быть в **одном регионе**.
+
+**Быстрый фикс (без пересоздания Blueprint):**
+
+1. Dashboard → **athlete-db** → **Info** / **Connect**
+2. Скопируйте **External Database URL** (полный адрес с `.frankfurt-postgres.render.com` или `.oregon-postgres.render.com`)
+3. Dashboard → **athlete-monitoring-api** → **Environment**
+4. Замените `DATABASE_URL` на скопированный External URL
+5. Добавьте переменную `DATABASE_SSL` = `true`
+6. **Manual Deploy** → Deploy latest commit
+
+**Долгосрочный фикс:** обновите код из репозитория (в `db.js` хост расширяется автоматически) и убедитесь, что в `render.yaml` у API и БД один `region` (например `frankfurt`).
+
 ### 1. Откройте Logs сервиса API
 
 Частые причины:
 
 | Ошибка в логах | Решение |
 |----------------|---------|
+| `ENOTFOUND dpg-...-a` | См. блок выше — External Database URL или один регион |
 | `database folder not found` | В репозитории должна быть папка `database/` в корне (рядом с `backend/`) |
 | `Database: FAILED` | Подождите, пока БД станет **Available**; перезапустите API (**Manual Deploy**) |
 | `ECONNREFUSED` к Postgres | Проверьте, что `DATABASE_URL` привязан к БД (Blueprint делает это сам) |

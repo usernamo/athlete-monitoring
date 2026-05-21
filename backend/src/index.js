@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
-import { checkConnection, connectionString, query } from "./db.js";
+import { checkConnection, connectionString, query, safeConnectionLabel } from "./db.js";
 import { TEST_ACCOUNTS, ensureTestData } from "./ensureTestData.js";
 import { registerDiaryRoutes } from "./diaryRoutes.js";
 import { registerNutritionRoutes } from "./nutritionRoutes.js";
@@ -253,7 +253,7 @@ app.get("/api/athletes/:id/nutrition", async (req, res) => {
 async function start() {
   console.log("");
   console.log("Athlete Monitoring API — starting...");
-  console.log(`Database: ${connectionString.replace(/:[^:@]+@/, ":****@")}`);
+  console.log(`Database: ${safeConnectionLabel(connectionString)}`);
 
   try {
     await checkConnection();

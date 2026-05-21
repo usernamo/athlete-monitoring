@@ -1,11 +1,11 @@
-# Render Blueprint — New → Blueprint → подключить репозиторий
-# Документация: RENDER_DEPLOY.md
+# Render Blueprint — API и PostgreSQL в одном регионе (важно для DATABASE_URL)
 
 databases:
   - name: athlete-db
     databaseName: athlete_monitoring
     user: athlete
     plan: free
+    region: frankfurt
 
 services:
   - type: web
@@ -23,6 +23,8 @@ services:
         value: 0.0.0.0
       - key: DATABASE_DIR
         value: ../database
+      - key: PG_REGION
+        value: frankfurt
       - key: DATABASE_URL
         fromDatabase:
           name: athlete-db

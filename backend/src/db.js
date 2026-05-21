@@ -3,9 +3,37 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const connectionString =
+/**
+ * Render Internal URL часто даёт хост вида dpg-xxxxx-a без домена.
+ * Он резолвится только в той же сети/регионе. Расширяем до полного имени.
+ */
+function normalizeDatabaseUrl(raw) {
+  if (!raw) return raw;
+  const trimmed = raw.trim();
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname;
+
+    if (/^dpg-[a-z0-9]+-a$/i.test(host)) {
+      const region =
+        process.env.PG_REGION ||
+        process.env.RENDER_REGION ||
+        "oregon";
+      parsed.hostname = `${host}.${region}-postgres.render.com`;
+      console.log(`[db] Render DB host expanded to ${parsed.hostname}`);
+    }
+
+    return parsed.toString();
+  } catch {
+    return trimmed;
+  }
+}
+
+const rawUrl =
   process.env.DATABASE_URL ||
   "postgresql://athlete:athlete_secret@localhost:5432/athlete_monitoring";
+
+const connectionString = normalizeDatabaseUrl(rawUrl);
 
 const useSsl =
   process.env.DATABASE_SSL === "true" ||
@@ -14,7 +42,7 @@ const useSsl =
 const pool = new pg.Pool({
   connectionString,
   ssl: useSsl ? { rejectUnauthorized: false } : undefined,
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 15000,
   idleTimeoutMillis: 30000,
   max: 10,
 });
@@ -34,6 +62,16 @@ export async function checkConnection() {
 
 export async function query(text, params) {
   return pool.query(text, params);
+}
+
+/** Для логов — без пароля */
+export function safeConnectionLabel(url) {
+  try {
+    const u = new URL(url);
+    return `postgresql://${u.username}:***@${u.hostname}${u.pathname}`;
+  } catch {
+    return "postgresql://***";
+  }
 }
 
 export { connectionString };
