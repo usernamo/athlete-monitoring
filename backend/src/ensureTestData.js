@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import { query } from "./db.js";
+import { ensureMetricCatalog } from "./ensureMetricCatalog.js";
 import { seedSampleData } from "./seedSampleData.js";
 
 const ROLE_ATHLETE = "11111111-1111-1111-1111-111111111103";
@@ -281,12 +282,7 @@ export async function ensureTestData() {
     [femaleId]
   );
 
-  await query(`
-    INSERT INTO metric_types (id, category_id, name, unit, min_value, max_value) VALUES
-      ('77777777-7777-7777-7777-777777777709', '66666666-6666-6666-6666-666666666603', 'mood', 'score', 1, 10),
-      ('77777777-7777-7777-7777-777777777710', '66666666-6666-6666-6666-666666666603', 'wellbeing', 'score', 1, 10)
-    ON CONFLICT (category_id, name) DO NOTHING
-  `);
+  await ensureMetricCatalog();
 
   if (process.env.RESEED_SAMPLE_DATA === "1") {
     await seedSampleData();
