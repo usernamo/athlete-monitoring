@@ -7,29 +7,45 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATABASE_DIR =
   process.env.DATABASE_DIR || path.resolve(__dirname, "../../database");
 
-export async function runMigrations() {
-  const { rows } = await query(
-    `SELECT to_regclass('public.users')::text AS users_table`
-  );
-  if (rows[0]?.users_table) {
-    console.log("[migrate] schema already present");
-    return;
-  }
+/** Только полный начальный сид — на уже существующей БД не перезапускаем */
+const SKIP_WHEN_DB_EXISTS = new Set(["001_schema.sql", "002_seed.sql"]);
 
+export async function runMigrations() {
   if (!fs.existsSync(DATABASE_DIR)) {
     throw new Error(`database folder not found: ${DATABASE_DIR}`);
   }
+
+  const { rows } = await query(
+    `SELECT to_regclass('public.users')::text AS users_table`
+  );
+  const dbExists = !!rows[0]?.users_table;
 
   const files = fs
     .readdirSync(DATABASE_DIR)
     .filter((f) => f.endsWith(".sql"))
     .sort();
 
-  console.log(`[migrate] applying ${files.length} SQL files...`);
+  if (!dbExists) {
+    console.log(`[migrate] fresh database — applying all ${files.length} SQL files`);
+  } else {
+    console.log(
+      `[migrate] existing database — applying incremental migrations (${files.length - SKIP_WHEN_DB_EXISTS.size} files)`
+    );
+  }
+
   for (const file of files) {
+    if (dbExists && SKIP_WHEN_DB_EXISTS.has(file)) {
+      console.log(`[migrate] skip ${file}`);
+      continue;
+    }
     const sql = fs.readFileSync(path.join(DATABASE_DIR, file), "utf8");
-    console.log(`[migrate] ${file}`);
-    await query(sql);
+    console.log(`[migrate] apply ${file}`);
+    try {
+      await query(sql);
+    } catch (e) {
+      console.error(`[migrate] failed on ${file}:`, e.message);
+      throw e;
+    }
   }
   console.log("[migrate] done");
 }

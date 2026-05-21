@@ -15,6 +15,7 @@ import { registerTrainingPlanRoutes } from "./trainingPlanRoutes.js";
 import { registerAthleteTrainingRoutes } from "./athleteTrainingRoutes.js";
 import { runMigrations } from "./migrate.js";
 import { ensureMetricCatalog } from "./ensureMetricCatalog.js";
+import { ensureSchema } from "./ensureSchema.js";
 
 dotenv.config();
 
@@ -260,6 +261,7 @@ async function start() {
     await checkConnection();
     console.log("Database: OK (connected)");
     await runMigrations();
+    await ensureSchema();
     await ensureMetricCatalog();
     await ensureTestData();
   } catch (e) {
