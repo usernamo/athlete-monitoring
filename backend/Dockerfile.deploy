@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY backend/package.json backend/package-lock.json* ./
+RUN npm ci --omit=dev 2>/dev/null || npm install --omit=dev
+
+COPY backend/src ./src
+COPY database /database
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
+ENV DATABASE_DIR=/database
+
+EXPOSE 3000
+
+CMD ["node", "src/index.js"]

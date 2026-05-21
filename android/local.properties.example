@@ -1,0 +1,2 @@
+## Скопируйте в local.properties и укажите URL после деплоя на Render
+DEMO_API_URL=https://your-service.onrender.com/

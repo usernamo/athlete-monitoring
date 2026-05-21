@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: athlete_monitoring_db
+    environment:
+      POSTGRES_USER: athlete
+      POSTGRES_PASSWORD: athlete_secret
+      POSTGRES_DB: athlete_monitoring
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/001_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/002_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+      - ./database/005_diary_metrics.sql:/docker-entrypoint-initdb.d/05_diary_metrics.sql
+      - ./database/006_nutrition_extended.sql:/docker-entrypoint-initdb.d/06_nutrition_extended.sql
+      - ./database/007_calendar.sql:/docker-entrypoint-initdb.d/07_calendar.sql
+      - ./database/008_profile_registration.sql:/docker-entrypoint-initdb.d/08_profile_registration.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U athlete -d athlete_monitoring"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

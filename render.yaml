@@ -1,0 +1,29 @@
+# Render Blueprint — New → Blueprint → подключить репозиторий
+# Документация: RENDER_DEPLOY.md
+
+databases:
+  - name: athlete-db
+    databaseName: athlete_monitoring
+    user: athlete
+    plan: free
+
+services:
+  - type: web
+    name: athlete-monitoring-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_DIR
+        value: ../database
+      - key: DATABASE_URL
+        fromDatabase:
+          name: athlete-db
+          property: connectionString

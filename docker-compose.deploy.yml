@@ -1,0 +1,37 @@
+# Полный стенд: PostgreSQL + API (доступ с телефона в той же Wi‑Fi сети)
+# Запуск: docker compose -f docker-compose.deploy.yml up -d --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: athlete_monitoring_db
+    environment:
+      POSTGRES_USER: athlete
+      POSTGRES_PASSWORD: athlete_secret
+      POSTGRES_DB: athlete_monitoring
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U athlete -d athlete_monitoring"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.deploy
+    container_name: athlete_monitoring_api
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://athlete:athlete_secret@postgres:5432/athlete_monitoring
+      HOST: 0.0.0.0
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
