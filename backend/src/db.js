@@ -29,19 +29,41 @@ function normalizeDatabaseUrl(raw) {
   }
 }
 
+function isRemoteHost(url) {
+  return /render\.com|neon\.tech|supabase\.co|amazonaws\.com|vercel-storage\.com/i.test(
+    url
+  );
+}
+
+/**
+ * Neon/Vercel URLs often include sslmode=require, which triggers a pg-connection-string
+ * deprecation warning when combined with Pool.ssl. TLS is configured via Pool.ssl instead.
+ */
+function connectionStringForPool(url, useSsl) {
+  if (!useSsl) return url;
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.delete("sslmode");
+    parsed.searchParams.delete("ssl");
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 const rawUrl =
   process.env.DATABASE_URL ||
   process.env.POSTGRES_URL ||
   process.env.POSTGRES_URL_NON_POOLING ||
   "postgresql://athlete:athlete_secret@localhost:5432/athlete_monitoring";
 
-const connectionString = normalizeDatabaseUrl(rawUrl);
+const normalizedUrl = normalizeDatabaseUrl(rawUrl);
 
 const useSsl =
   process.env.DATABASE_SSL === "true" ||
-  /render\.com|neon\.tech|supabase\.co|amazonaws\.com|vercel-storage\.com/i.test(
-    connectionString
-  );
+  (process.env.DATABASE_SSL !== "false" && isRemoteHost(normalizedUrl));
+
+const connectionString = connectionStringForPool(normalizedUrl, useSsl);
 
 const pool = new pg.Pool({
   connectionString,
