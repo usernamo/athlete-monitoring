@@ -15,6 +15,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -36,6 +37,10 @@ fun AuthScreen(vm: AppViewModel) {
     val state by vm.state.collectAsState()
     var mode by remember { mutableIntStateOf(0) }
     var apiUrl by remember { mutableStateOf(vm.getApiBaseUrl()) }
+
+    LaunchedEffect(Unit) {
+        apiUrl = vm.getApiBaseUrl()
+    }
 
     Column(
         Modifier
@@ -90,7 +95,7 @@ private fun ApiServerCard(
         Text("Адрес сервера", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Для оценки на другом телефоне укажите публичный URL API (Render) или http://IP-вашего-ПК:3000/",
+            "Укажите публичный URL API (Vercel/Render) или http://IP-вашего-ПК:3000/ для локальной сети",
             style = MaterialTheme.typography.bodySmall,
             color = SportColors.TextSecondary
         )

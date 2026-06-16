@@ -6,34 +6,52 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-fun readDemoApiUrl(): String {
-    val props = Properties()
-    val f = rootProject.file("local.properties")
-    if (f.exists()) f.inputStream().use { props.load(it) }
-    val url = props.getProperty("DEMO_API_URL")?.trim()?.takeIf { it.isNotEmpty() }
-        ?: "http://10.0.2.2:3000/"
-    return if (url.endsWith("/")) url else "$url/"
+fun ensureTrailingSlash(url: String): String =
+    if (url.endsWith("/")) url else "$url/"
+
+fun readApiBaseUrl(): String {
+    val local = Properties()
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use {
+        local.load(it)
+    }
+    local.getProperty("DEMO_API_URL")?.trim()?.takeIf { it.isNotEmpty() }?.let {
+        return ensureTrailingSlash(it)
+    }
+
+    val defaults = Properties()
+    rootProject.file("api.defaults.properties").takeIf { it.exists() }?.inputStream()?.use {
+        defaults.load(it)
+    }
+    defaults.getProperty("PRODUCTION_API_URL")?.trim()?.takeIf { it.isNotEmpty() }?.let {
+        if (!it.contains("your-project") && !it.contains("CHANGE-ME")) {
+            return ensureTrailingSlash(it)
+        }
+    }
+
+    return "http://10.0.2.2:3000/"
 }
 
 android {
     namespace = "com.athlete.monitoring"
     compileSdk = 35
 
+    val apiBaseUrl = readApiBaseUrl()
+
     defaultConfig {
         applicationId = "com.athlete.monitoring"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2.0-demo"
+        versionCode = 3
+        versionName = "0.2.1-demo"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/\"")
+            isMinifyEnabled = false
         }
         release {
             isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", "\"${readDemoApiUrl()}\"")
         }
     }
 

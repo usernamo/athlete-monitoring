@@ -1,2 +1,5 @@
-## Скопируйте в local.properties и укажите URL после деплоя на Render
-DEMO_API_URL=https://your-project.vercel.app/
+## Скопируйте в local.properties (переопределяет api.defaults.properties)
+# sdk.dir=C\:\\Users\\user\\AppData\\Local\\Android\\Sdk
+# DEMO_API_URL=https://ваш-проект.vercel.app/
+
+## Или задайте URL в api.defaults.properties (PRODUCTION_API_URL) — попадает в git

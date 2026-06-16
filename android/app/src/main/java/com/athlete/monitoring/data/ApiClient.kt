@@ -10,6 +10,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiClient {
     private const val PREFS = "athlete_api_prefs"
     private const val KEY_BASE_URL = "api_base_url"
+    private const val KEY_BUILD_URL = "api_build_url"
+    private const val KEY_USER_OVERRIDE = "api_user_override"
 
     @Volatile
     private var cached: ApiService? = null
@@ -18,16 +20,34 @@ object ApiClient {
 
     fun init(context: Context) {
         appContext = context.applicationContext
+        migrateStoredUrl()
+    }
+
+    private fun migrateStoredUrl() {
+        if (!::appContext.isInitialized) return
+        val prefs = appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val buildUrl = normalize(BuildConfig.API_BASE_URL)
+        val savedBuild = prefs.getString(KEY_BUILD_URL, null)
+        val userOverride = prefs.getBoolean(KEY_USER_OVERRIDE, false)
+
+        if (!userOverride || savedBuild != buildUrl) {
+            prefs.edit()
+                .putString(KEY_BASE_URL, buildUrl)
+                .putString(KEY_BUILD_URL, buildUrl)
+                .putBoolean(KEY_USER_OVERRIDE, false)
+                .apply()
+            cached = null
+        }
     }
 
     fun getBaseUrl(): String {
-        if (!::appContext.isInitialized) return normalize(BuildConfig.API_BASE_URL)
-        val saved = appContext
-            .getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .getString(KEY_BASE_URL, null)
+        val buildUrl = normalize(BuildConfig.API_BASE_URL)
+        if (!::appContext.isInitialized) return buildUrl
+        val prefs = appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val saved = prefs.getString(KEY_BASE_URL, null)
             ?.trim()
             ?.takeIf { it.isNotEmpty() }
-        return normalize(saved ?: BuildConfig.API_BASE_URL)
+        return normalize(saved ?: buildUrl)
     }
 
     fun setBaseUrl(url: String) {
@@ -36,6 +56,8 @@ object ApiClient {
         appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_BASE_URL, normalized)
+            .putString(KEY_BUILD_URL, normalize(BuildConfig.API_BASE_URL))
+            .putBoolean(KEY_USER_OVERRIDE, true)
             .apply()
         cached = null
     }
@@ -72,7 +94,7 @@ object ApiClient {
     private fun normalize(url: String): String {
         var u = url.trim()
         if (!u.startsWith("http://") && !u.startsWith("https://")) {
-            u = "http://$u"
+            u = "https://$u"
         }
         if (!u.endsWith("/")) u += "/"
         return u

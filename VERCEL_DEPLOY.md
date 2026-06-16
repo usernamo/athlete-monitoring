@@ -118,10 +118,15 @@ npm run setup:remote:slaves
 
 ## Шаг 6. Android APK с онлайн-API
 
-В `android/local.properties`:
+В `android/api.defaults.properties` (файл в git):
 
 ```properties
-sdk.dir=C\:\\Users\\user\\AppData\\Local\\Android\\Sdk
+PRODUCTION_API_URL=https://ВАШ-ПРОЕКТ.vercel.app/
+```
+
+Или переопределите в `android/local.properties`:
+
+```properties
 DEMO_API_URL=https://ВАШ-ПРОЕКТ.vercel.app/
 ```
 
