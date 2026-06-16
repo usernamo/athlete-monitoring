@@ -12,6 +12,7 @@
     "hash-password": "node scripts/hash-password.mjs",
     "seed": "node scripts/run-seed.mjs",
     "seed:slaves": "node scripts/seed-50-slaves.mjs",
+    "seed:56-slaves": "node scripts/seed-50-slaves.mjs",
     "setup:remote": "node scripts/setup-remote.mjs",
     "setup:remote:slaves": "node scripts/setup-remote.mjs --slaves"
   },

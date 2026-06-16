@@ -81,8 +81,8 @@ async function loadMetricTypeMap() {
   return Object.fromEntries(rows.map((r) => [r.name, r.id]));
 }
 
-async function clearRecent(athleteId) {
-  const from = dateStr(ITERATIONS - 1);
+async function clearRecent(athleteId, iterations = ITERATIONS) {
+  const from = dateStr(iterations - 1);
 
   await query(
     `DELETE FROM athlete_metrics WHERE athlete_id = $1 AND measured_at::date >= $2::date`,
@@ -296,23 +296,30 @@ async function seedDayExtras(athleteId, dayOffset, compIndex) {
   );
 }
 
-export async function seedSampleData() {
-  const athletes = await getAllAthleteIds();
+export async function seedActivityForAthletes(athleteIds, { iterations = ITERATIONS, clearFirst = true } = {}) {
+  if (!athleteIds.length) return;
   const metricMap = await loadMetricTypeMap();
 
-  for (const athleteId of athletes) {
-    await clearRecent(athleteId);
+  if (clearFirst) {
+    for (const athleteId of athleteIds) {
+      await clearRecent(athleteId, iterations);
+    }
   }
 
-  for (const athleteId of athletes) {
-    for (let i = 0; i < ITERATIONS; i++) {
-      const dayOffset = ITERATIONS - 1 - i;
+  for (const athleteId of athleteIds) {
+    for (let i = 0; i < iterations; i++) {
+      const dayOffset = iterations - 1 - i;
       await seedDiaryDay(athleteId, dayOffset, i, metricMap);
       await seedDayExtras(athleteId, dayOffset, i);
     }
   }
 
   console.log(
-    `[seed] ${ITERATIONS} diary days × ${athletes.length} athletes (daily_reports, trainings, metrics)`
+    `[seed] ${iterations} diary days × ${athleteIds.length} athletes (daily_reports, trainings, nutrition, metrics)`
   );
+}
+
+export async function seedSampleData() {
+  const athletes = await getAllAthleteIds();
+  await seedActivityForAthletes(athletes, { iterations: ITERATIONS, clearFirst: true });
 }

@@ -3,7 +3,7 @@ import { ensureTestData } from "./ensureTestData.js";
 import { runMigrations } from "./migrate.js";
 import { ensureMetricCatalog } from "./ensureMetricCatalog.js";
 import { ensureSchema } from "./ensureSchema.js";
-import { seed50Slaves } from "./seed50Slaves.js";
+import { seedSlaves } from "./seed50Slaves.js";
 
 let bootstrapPromise = null;
 
@@ -18,8 +18,8 @@ export async function bootstrap() {
     await ensureSchema();
     await ensureMetricCatalog();
     await ensureTestData();
-    if (process.env.SEED_50_SLAVES === "1") {
-      await seed50Slaves();
+    if (process.env.SEED_50_SLAVES === "1" || process.env.SEED_56_SLAVES === "1") {
+      await seedSlaves({ withActivity: true, activityDays: 14 });
     }
     console.log("[bootstrap] ready");
   })().catch((e) => {

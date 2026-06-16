@@ -3,7 +3,7 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { checkConnection } from "../src/db.js";
 import { bootstrap } from "../src/bootstrap.js";
-import { seed50Slaves } from "../src/seed50Slaves.js";
+import { seedSlaves } from "../src/seed50Slaves.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, "../.env") });
@@ -33,7 +33,7 @@ try {
 await bootstrap();
 
 if (process.argv.includes("--slaves")) {
-  await seed50Slaves();
+  await seedSlaves({ withActivity: true, activityDays: 14 });
 }
 
 console.log("Remote database setup complete.");

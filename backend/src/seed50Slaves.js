@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import { query } from "./db.js";
+import { seedActivityForAthletes } from "./seedSampleData.js";
 
 const ROLE_ATHLETE = "11111111-1111-1111-1111-111111111103";
 const ORG_ID = "22222222-2222-2222-2222-222222222201";
@@ -8,18 +9,21 @@ const COACH_FULL_NAME = "Смирнов Алексей Петрович";
 const COACH_PHONE = "+7 (999) 444-55-66";
 const INSTITUTION = "СШОР №1";
 const PASSWORD = "test123";
-const SLAVE_COUNT = 50;
+export const SLAVE_COUNT = 56;
+const ACTIVITY_DAYS = 14;
 
 const FIRST_NAMES_M = [
   "Алексей", "Дмитрий", "Иван", "Сергей", "Андрей", "Никита", "Максим", "Артём",
   "Кирилл", "Павел", "Роман", "Егор", "Владимир", "Олег", "Илья", "Тимур",
   "Даниил", "Михаил", "Глеб", "Степан", "Фёдор", "Ярослав", "Борис", "Григорий", "Лев",
+  "Виктор", "Станислав", "Константин", "Вадим",
 ];
 
 const FIRST_NAMES_F = [
   "Анна", "Мария", "Елена", "Ольга", "Дарья", "Полина", "Виктория", "Алина",
   "Ксения", "София", "Екатерина", "Наталья", "Юлия", "Валерия", "Арина", "Диана",
   "Кристина", "Вероника", "Милана", "Алиса", "Татьяна", "Ирина", "Людмила", "Светлана", "Зоя",
+  "Вера", "Надежда", "Лариса", "Галина",
 ];
 
 const LAST_NAMES = [
@@ -29,16 +33,19 @@ const LAST_NAMES = [
   "Семёнов", "Голубев", "Виноградов", "Богданов", "Воробьёв", "Фролов", "Макаров", "Николаев",
   "Осипов", "Степанов", "Титов", "Фомин", "Чернов", "Шубин", "Егоров", "Данилов",
   "Киселёв", "Медведев", "Беляев", "Комаров", "Жуков", "Крылов", "Тарасов", "Белов", "Марков",
+  "Ковалёв", "Лазарев", "Мельников", "Рыбаков", "Сафонов", "Устинов", "Филиппов",
 ];
 
 const PATRONYMICS_M = [
   "Сергеевич", "Андреевич", "Иванович", "Дмитриевич", "Алексеевич", "Николаевич",
   "Павлович", "Владимирович", "Олегович", "Романович", "Михайлович", "Егорович",
+  "Артёмович", "Викторович",
 ];
 
 const PATRONYMICS_F = [
   "Сергеевна", "Андреевна", "Ивановна", "Дмитриевна", "Алексеевна", "Николаевна",
   "Павловна", "Владимировна", "Олеговна", "Романовна", "Михайловна", "Егоровна",
+  "Артёмовна", "Викторовна",
 ];
 
 const SPORTS = [
@@ -67,7 +74,7 @@ function uuidForProfile(i) {
   return `a2000000-0000-4000-8000-${String(i).padStart(12, "0")}`;
 }
 
-function buildSlave(i) {
+export function buildSlave(i) {
   const female = i % 2 === 0;
   const gender = female ? "female" : "male";
   const firstName = female
@@ -114,7 +121,17 @@ function buildSlave(i) {
   };
 }
 
-export async function seed50Slaves() {
+export async function getSlaveAthleteIds() {
+  const { rows } = await query(
+    `SELECT ap.id FROM athlete_profiles ap
+     JOIN users u ON u.id = ap.user_id
+     WHERE u.email LIKE 'slave-%@test.local'
+     ORDER BY u.email`
+  );
+  return rows.map((r) => r.id);
+}
+
+async function upsertSlaveProfiles(slaves) {
   const { rows: coachRows } = await query(
     `SELECT id FROM coach_profiles WHERE id = $1`,
     [COACH_PROFILE_ID]
@@ -126,7 +143,6 @@ export async function seed50Slaves() {
   }
 
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
-  const slaves = Array.from({ length: SLAVE_COUNT }, (_, idx) => buildSlave(idx + 1));
 
   for (const s of slaves) {
     await query(
@@ -198,17 +214,46 @@ export async function seed50Slaves() {
        ON CONFLICT (coach_id, athlete_id) DO NOTHING`,
       [COACH_PROFILE_ID, s.profileId]
     );
+
+    if (s.gender === "female") {
+      await query(`DELETE FROM menstrual_cycles WHERE athlete_id = $1`, [s.profileId]);
+      await query(
+        `INSERT INTO menstrual_cycles (athlete_id, cycle_start_date, cycle_end_date, cycle_length_days, notes)
+         VALUES
+           ($1, CURRENT_DATE - 28, CURRENT_DATE - 23, 28, 'Цикл 1'),
+           ($1, CURRENT_DATE - 2, NULL, 28, 'Текущий цикл')`,
+        [s.profileId]
+      );
+    }
+  }
+}
+
+export async function seedSlaves({ withActivity = true, activityDays = ACTIVITY_DAYS } = {}) {
+  const slaves = Array.from({ length: SLAVE_COUNT }, (_, idx) => buildSlave(idx + 1));
+  await upsertSlaveProfiles(slaves);
+
+  if (withActivity) {
+    const ids = slaves.map((s) => s.profileId);
+    await seedActivityForAthletes(ids, { iterations: activityDays, clearFirst: true });
   }
 
   const { rows } = await query(
-    `SELECT COUNT(*)::int AS n
-     FROM coach_athletes
-     WHERE coach_id = $1`,
+    `SELECT COUNT(*)::int AS n FROM coach_athletes WHERE coach_id = $1`,
     [COACH_PROFILE_ID]
   );
 
-  console.log(`[seed50Slaves] Upserted ${SLAVE_COUNT} slave athletes (coach team total: ${rows[0].n})`);
-  console.log(`[seed50Slaves] Login: slave-01@test.local … slave-50@test.local / ${PASSWORD}`);
+  console.log(
+    `[seedSlaves] Upserted ${SLAVE_COUNT} slave athletes (coach team total: ${rows[0].n})`
+  );
+  if (withActivity) {
+    console.log(`[seedSlaves] Activity: ${activityDays} days per slave (trainings, nutrition, diary, metrics)`);
+  }
+  console.log(`[seedSlaves] Login: slave-01@test.local … slave-${pad2(SLAVE_COUNT)}@test.local / ${PASSWORD}`);
 
   return slaves;
+}
+
+/** @deprecated use seedSlaves */
+export async function seed50Slaves() {
+  return seedSlaves();
 }
