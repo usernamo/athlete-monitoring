@@ -1,11 +1,18 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "installCommand": "cd backend && npm install",
-  "buildCommand": "echo \"API ready\"",
-  "rewrites": [
+  "framework": null,
+  "installCommand": "npm install && npm install --prefix backend",
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/api"
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "api/index.js"
     }
   ],
   "functions": {

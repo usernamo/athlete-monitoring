@@ -23,20 +23,29 @@ git push
 
 1. Откройте [vercel.com](https://vercel.com) → войдите через GitHub.
 2. **Add New…** → **Project** → выберите репозиторий `athlete-monitoring`.
-3. **Framework Preset:** Other (не Next.js).
-4. **Root Directory:** оставьте корень репозитория (`.`).
-5. Vercel подхватит `vercel.json` автоматически.
-6. Пока **не деплойте** — сначала создайте базу (шаг 3).
+3. **Framework Preset:** **Other** (не Next.js, не Static).
+4. **Root Directory:** оставьте корень (`.`).
+5. **Build Command:** оставьте пустым (управляется `vercel.json`).
+6. **Output Directory:** оставьте **пустым** — у API-only проекта нет папки `public`.
+7. Vercel подхватит `vercel.json` автоматически.
+8. Пока **не деплойте** — сначала создайте базу (шаг 3).
+
+> Если уже был неудачный деплой: **Settings → General → Framework Preset → Other**, **Output Directory** — очистите поле → **Redeploy**.
 
 ---
 
-## Шаг 3. База данных (Vercel Postgres)
+## Шаг 3. База данных (Neon — Serverless Postgres)
 
-1. В проекте Vercel: вкладка **Storage** → **Create Database** → **Postgres** (Neon).
-2. Имя, например: `athlete-db` → **Create**.
-3. Подключите БД к проекту (**Connect to Project**).
-4. Vercel добавит переменные окружения:
-   - `POSTGRES_URL` — pooled (для API)
+На экране **Create a database** отдельной кнопки «Postgres» нет — PostgreSQL создаётся через **Marketplace**:
+
+1. Прокрутите до блока **Marketplace Database Providers**.
+2. Нажмите **Create** у **Neon** (подпись: *Serverless Postgres*).
+   - Альтернатива: **Supabase** (*Postgres backend*) — тоже подойдёт.
+3. Авторизуйтесь в Neon (если спросит) → выберите регион (ближе к пользователям, например EU).
+4. Имя БД, например: `athlete-db` → **Create** / **Continue**.
+5. **Connect to Project** → выберите проект `athlete-monitoring`.
+6. Vercel добавит переменные окружения в проект:
+   - `POSTGRES_URL` — pooled (для API на Vercel)
    - `POSTGRES_URL_NON_POOLING` — для миграций с ПК
 
 ### Переменные окружения API
@@ -147,6 +156,7 @@ APK: `android\app\build\outputs\apk\release\app-release.apk`
 | `database unavailable` | Проверьте Storage подключён к проекту; `POSTGRES_URL` в Environment |
 | Долгий первый запрос | Нормально — миграции; затем `npm run setup:remote` с ПК |
 | `database folder not found` | Добавьте `DATABASE_DIR=database` в Environment Variables |
+| `No Output Directory named "public"` | Settings → Output Directory — **очистите**; Framework Preset → **Other**; Redeploy |
 | Android не подключается | URL со слэшем в конце: `https://....vercel.app/` |
 | Таймаут 60 с | Hobby: лимит 10 с на функцию — используйте `setup:remote` с ПК |
 
