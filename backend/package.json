@@ -10,7 +10,10 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "hash-password": "node scripts/hash-password.mjs",
-    "seed": "node scripts/run-seed.mjs"
+    "seed": "node scripts/run-seed.mjs",
+    "seed:slaves": "node scripts/seed-50-slaves.mjs",
+    "setup:remote": "node scripts/setup-remote.mjs",
+    "setup:remote:slaves": "node scripts/setup-remote.mjs --slaves"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

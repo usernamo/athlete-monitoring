@@ -31,13 +31,17 @@ function normalizeDatabaseUrl(raw) {
 
 const rawUrl =
   process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.POSTGRES_URL_NON_POOLING ||
   "postgresql://athlete:athlete_secret@localhost:5432/athlete_monitoring";
 
 const connectionString = normalizeDatabaseUrl(rawUrl);
 
 const useSsl =
   process.env.DATABASE_SSL === "true" ||
-  /render\.com|neon\.tech|supabase\.co|amazonaws\.com/i.test(connectionString);
+  /render\.com|neon\.tech|supabase\.co|amazonaws\.com|vercel-storage\.com/i.test(
+    connectionString
+  );
 
 const pool = new pg.Pool({
   connectionString,

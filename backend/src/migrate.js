@@ -4,8 +4,14 @@ import { fileURLToPath } from "url";
 import { query } from "./db.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATABASE_DIR =
-  process.env.DATABASE_DIR || path.resolve(__dirname, "../../database");
+
+function resolveDatabaseDir() {
+  const raw = process.env.DATABASE_DIR;
+  if (!raw) return path.resolve(__dirname, "../../database");
+  return path.isAbsolute(raw) ? raw : path.resolve(process.cwd(), raw);
+}
+
+const DATABASE_DIR = resolveDatabaseDir();
 
 /** Только полный начальный сид — на уже существующей БД не перезапускаем */
 const SKIP_WHEN_DB_EXISTS = new Set(["001_schema.sql", "002_seed.sql"]);

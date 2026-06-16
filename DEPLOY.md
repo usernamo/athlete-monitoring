@@ -4,7 +4,21 @@
 
 ---
 
-## Вариант A — Render.com (рекомендуется, работает из любой сети)
+## Вариант A — Vercel (API + Vercel Postgres)
+
+**Подробная инструкция:** [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md)
+
+Кратко:
+
+1. Залейте проект на GitHub.
+2. [vercel.com](https://vercel.com) → **New Project** → репозиторий.
+3. **Storage** → **Postgres** → подключить к проекту.
+4. Deploy → URL: `https://ваш-проект.vercel.app`
+5. Проверка: `/health` → `{"status":"ok"}`
+
+---
+
+## Вариант B — Render.com (рекомендуется, если Vercel таймаутит миграции)
 
 **Подробная инструкция:** [RENDER_DEPLOY.md](RENDER_DEPLOY.md)
 
@@ -42,7 +56,7 @@ APK: `android/app/build/outputs/apk/release/app-release.apk`
 
 ---
 
-## Вариант B — ваш ПК в Wi‑Fi (без облака)
+## Вариант C — ваш ПК в Wi‑Fi (без облака)
 
 Телефон проверяющего должен быть в **той же Wi‑Fi**, что и ваш компьютер.
 
@@ -63,7 +77,7 @@ docker compose -f docker-compose.deploy.yml up -d --build
 
 ---
 
-## Вариант C — только backend на ПК (без Docker API)
+## Вариант D — только backend на ПК (без Docker API)
 
 ```powershell
 docker compose up -d

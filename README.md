@@ -10,8 +10,12 @@ athlete-monitoring/
 ├── docker-compose.yml # PostgreSQL 16
 ├── backend/           # Node.js REST API
 ├── android/           # Kotlin + Jetpack Compose
+├── api/               # Vercel serverless entry
+├── vercel.json        # Конфиг деплоя на Vercel
 └── scripts/           # Импорт из Excel + анализ файлов
 ```
+
+**Онлайн-деплой:** [VERCEL_DEPLOY.md](VERCEL_DEPLOY.md) (Vercel + Postgres) или [RENDER_DEPLOY.md](RENDER_DEPLOY.md) (Render Blueprint).
 
 ## 1. База данных (PostgreSQL)
 
