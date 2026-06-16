@@ -12,7 +12,7 @@ import { registerProfileRoutes, mapProfile, PROFILE_SELECT, PROFILE_FROM } from 
 import { registerCoachRoutes } from "./coachRoutes.js";
 import { registerTrainingPlanRoutes } from "./trainingPlanRoutes.js";
 import { registerAthleteTrainingRoutes } from "./athleteTrainingRoutes.js";
-import { bootstrap } from "./bootstrap.js";
+import { bootstrap, pingDatabase } from "./bootstrap.js";
 
 const app = express();
 
@@ -52,7 +52,7 @@ registerAthleteTrainingRoutes(app);
 
 app.get("/health", async (_req, res) => {
   try {
-    await bootstrap();
+    await pingDatabase();
     res.json({ status: "ok" });
   } catch (e) {
     res.status(503).json({ status: "error", error: e.message });

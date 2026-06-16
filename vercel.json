@@ -15,5 +15,11 @@
       "maxDuration": 60,
       "includeFiles": "database/**"
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/health",
+      "schedule": "*/10 * * * *"
+    }
+  ]
 }

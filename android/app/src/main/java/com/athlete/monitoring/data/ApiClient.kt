@@ -6,6 +6,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object ApiClient {
     private const val PREFS = "athlete_api_prefs"
@@ -82,7 +83,13 @@ object ApiClient {
                 HttpLoggingInterceptor.Level.NONE
             }
         }
-        val client = OkHttpClient.Builder().addInterceptor(log).build()
+        val client = OkHttpClient.Builder()
+            .connectTimeout(90, TimeUnit.SECONDS)
+            .readTimeout(90, TimeUnit.SECONDS)
+            .writeTimeout(90, TimeUnit.SECONDS)
+            .callTimeout(120, TimeUnit.SECONDS)
+            .addInterceptor(log)
+            .build()
         return Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(client)

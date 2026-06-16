@@ -68,9 +68,9 @@ const connectionString = connectionStringForPool(normalizedUrl, useSsl);
 const pool = new pg.Pool({
   connectionString,
   ssl: useSsl ? { rejectUnauthorized: false } : undefined,
-  connectionTimeoutMillis: 15000,
-  idleTimeoutMillis: 30000,
-  max: 10,
+  connectionTimeoutMillis: 30000,
+  idleTimeoutMillis: 10000,
+  max: process.env.VERCEL === "1" ? 1 : 10,
 });
 
 pool.on("error", (err) => {
