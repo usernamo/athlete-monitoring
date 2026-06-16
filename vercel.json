@@ -3,16 +3,10 @@
   "version": 2,
   "framework": null,
   "installCommand": "npm install && npm install --prefix backend",
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "api/index.js"
+      "source": "/(.*)",
+      "destination": "/api"
     }
   ],
   "functions": {
