@@ -53,46 +53,12 @@ fun SportCard(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(16.dp),
         color = backgroundColor,
-        shadowElevation = 0.dp,
+        shadowElevation = 1.dp,
         tonalElevation = 0.dp
     ) {
-        Column(Modifier.padding(18.dp)) { content() }
-    }
-}
-
-@Composable
-fun SportHeader(
-    title: String,
-    subtitle: String? = null,
-    avatarText: String,
-    onAvatarClick: (() -> Unit)? = null,
-    onNotificationClick: (() -> Unit)? = null
-) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(SportColors.PastelPurple)
-                    .then(if (onAvatarClick != null) Modifier.clickable(onClick = onAvatarClick) else Modifier),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(avatarText, fontWeight = FontWeight.Bold, color = SportColors.Primary)
-            }
-            Spacer(Modifier.weight(1f))
-            SportIconButton(Icons.Default.Search, "Поиск") { }
-            Spacer(Modifier.width(8.dp))
-            SportIconButton(Icons.AutoMirrored.Filled.Logout, "Выход", onNotificationClick)
-        }
-        Spacer(Modifier.height(16.dp))
-        Text(title, style = MaterialTheme.typography.headlineLarge)
-        subtitle?.let {
-            Spacer(Modifier.height(4.dp))
-            Text(it, style = MaterialTheme.typography.bodyMedium)
-        }
+        Column(Modifier.padding(16.dp)) { content() }
     }
 }
 
@@ -282,7 +248,7 @@ fun SportPrimaryButton(
     Box(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(if (enabled) SportColors.Primary else SportColors.ChipBorder)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 16.dp),

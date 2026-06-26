@@ -1,13 +1,13 @@
 package com.athlete.monitoring.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -18,11 +18,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.athlete.monitoring.data.CompetitionEntryDto
-import com.athlete.monitoring.ui.components.SportCard
+import com.athlete.monitoring.ui.components.BottomNavTab
+import com.athlete.monitoring.ui.components.SportBottomNavigation
+import com.athlete.monitoring.ui.components.SportCoachPlanCard
 import com.athlete.monitoring.ui.components.SportHeader
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.ui.text.font.FontWeight
 import com.athlete.monitoring.ui.theme.SportColors
 import java.time.LocalDate
 import java.time.YearMonth
@@ -37,11 +36,13 @@ private sealed class AthleteNav {
     data object Profile : AthleteNav()
     data object Menstrual : AthleteNav()
     data object TrainingPlan : AthleteNav()
+    data object Analytics : AthleteNav()
 }
 
 @Composable
 fun MainShell(vm: AppViewModel) {
     var nav by remember { mutableStateOf<AthleteNav>(AthleteNav.Calendar) }
+    var bottomTab by remember { mutableStateOf(BottomNavTab.Home) }
     var editingProfile by remember { mutableStateOf(false) }
     var yearMonth by remember { mutableStateOf(YearMonth.now()) }
     val state by vm.state.collectAsState()
@@ -115,9 +116,33 @@ fun MainShell(vm: AppViewModel) {
     } ?: "??"
 
     val showMainHeader = nav is AthleteNav.Calendar
+    val showBottomNav = nav is AthleteNav.Calendar || nav is AthleteNav.DayMenu || nav is AthleteNav.Analytics
 
-    Scaffold(containerColor = SportColors.Background) { padding ->
-        Column(Modifier.padding(padding)) {
+    Scaffold(
+        containerColor = SportColors.Background,
+        bottomBar = {
+            if (showBottomNav) {
+                SportBottomNavigation(
+                    selected = when (nav) {
+                        is AthleteNav.Analytics -> BottomNavTab.Analytics
+                        is AthleteNav.DayMenu -> BottomNavTab.Home
+                        else -> bottomTab
+                    },
+                    onSelect = { tab ->
+                        bottomTab = tab
+                        when (tab) {
+                            BottomNavTab.Home, BottomNavTab.Calendar -> nav = AthleteNav.Calendar
+                            BottomNavTab.Analytics -> nav = AthleteNav.Analytics
+                            BottomNavTab.Profile -> {
+                                if (profile != null) nav = AthleteNav.Profile
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    ) { padding ->
+        Column(Modifier.padding(padding).fillMaxSize()) {
             if (showMainHeader) {
                 SportHeader(
                     title = monthTitleRu(yearMonth),
@@ -126,7 +151,7 @@ fun MainShell(vm: AppViewModel) {
                     onAvatarClick = profile?.let { { editingProfile = true } },
                     onNotificationClick = { vm.logout() }
                 )
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
             }
 
             when (val screen = nav) {
@@ -134,19 +159,7 @@ fun MainShell(vm: AppViewModel) {
                     Column(Modifier.padding(horizontal = 20.dp)) {
                         val planCount = state.trainingPlan?.items?.size ?: 0
                         if (planCount > 0) {
-                            SportCard(
-                                backgroundColor = SportColors.PastelOrange,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { nav = AthleteNav.TrainingPlan }
-                            ) {
-                                Text(
-                                    "План от тренера",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text("$planCount занятий — открыть список", style = MaterialTheme.typography.bodyMedium)
-                            }
+                            SportCoachPlanCard(planCount) { nav = AthleteNav.TrainingPlan }
                             Spacer(Modifier.height(12.dp))
                         }
                         MonthCalendarScreen(
@@ -161,6 +174,14 @@ fun MainShell(vm: AppViewModel) {
                             onMenstrualClick = if (isFemale) ({ nav = AthleteNav.Menstrual }) else null
                         )
                     }
+                }
+                AthleteNav.Analytics -> {
+                    DashboardTab(
+                        state = state,
+                        onEditProfile = { editingProfile = true },
+                        showRecommendations = true,
+                        padding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+                    )
                 }
                 AthleteNav.TrainingPlan -> {
                     AthleteTrainingPlanScreen(vm = vm, onBack = { nav = AthleteNav.Calendar })
@@ -216,10 +237,10 @@ fun MainShell(vm: AppViewModel) {
                 }
                 AthleteNav.Menstrual -> {
                     Column(Modifier.padding(horizontal = 20.dp)) {
-                        androidx.compose.material3.TextButton(onClick = { nav = AthleteNav.Calendar }) {
-                            androidx.compose.material3.Text("← К календарю")
+                        TextButton(onClick = { nav = AthleteNav.Calendar }) {
+                            Text("← К календарю")
                         }
-                        MenstrualTab(state, vm, PaddingValues(0.dp))
+                        MenstrualTab(state, vm, androidx.compose.foundation.layout.PaddingValues(0.dp))
                     }
                 }
                 AthleteNav.Profile -> {}

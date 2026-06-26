@@ -144,7 +144,7 @@ fun MonthCalendarScreen(
             Spacer(Modifier.height(4.dp))
             CalendarLegendRow(SportColors.AccentGreen, "точка — дневник")
             Spacer(Modifier.height(4.dp))
-            CalendarLegendRow(SportColors.PastelOrange, "точка — тренировка")
+            CalendarLegendRow(SportColors.TrainingDot, "точка — тренировка")
         }
         onMenstrualClick?.let { onClick ->
             Spacer(Modifier.height(12.dp))
@@ -196,7 +196,7 @@ private fun CalendarDayCell(
         CompetitionHighlight.Loss -> Triple(SportColors.AccentRed, SportColors.OnPrimary, isToday)
         null -> when {
             isToday -> Triple(SportColors.Primary, SportColors.OnPrimary, false)
-            else -> Triple(SportColors.PastelBlue.copy(alpha = 0.45f), SportColors.TextPrimary, false)
+            else -> Triple(SportColors.PastelBlue.copy(alpha = 0.35f), SportColors.TextPrimary, false)
         }
     }
 
@@ -210,7 +210,7 @@ private fun CalendarDayCell(
                 } else Modifier
             )
             .then(
-                if (showTodayRing) {
+                if (showTodayRing || (isToday && competition == CompetitionHighlight.Pending)) {
                     Modifier.border(2.dp, SportColors.Primary, CircleShape)
                 } else Modifier
             )
@@ -247,7 +247,7 @@ private fun CalendarDayCell(
                                 .background(
                                     if (competition != null && competition != CompetitionHighlight.Pending) {
                                         Color.White.copy(alpha = 0.85f)
-                                    } else SportColors.PastelOrange
+                                    } else SportColors.TrainingDot
                                 )
                         )
                     }
